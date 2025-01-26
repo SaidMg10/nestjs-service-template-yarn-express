@@ -1,4 +1,11 @@
-import { IsString, IsEmail, IsBoolean, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  IsBoolean,
+  IsOptional,
+  IsEnum,
+} from 'class-validator';
+import { UserRole } from 'src/common/enums';
 
 export class CreateUserDto {
   @IsString()
@@ -7,21 +14,12 @@ export class CreateUserDto {
   @IsString()
   lastName: string;
 
-  @IsString()
   @IsEmail()
   email: string;
 
-  //   @IsString()
-  //   @MinLength(6)
-  //   @MaxLength(50)
-  //   @Matches(/(?:(?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
-  //     message: 'Password must have uppercase, lowercase letters, and a number',
-  //   })
-  //   password: string;
-
-  @IsString()
+  @IsEnum(UserRole)
   @IsOptional()
-  role?: string; // Opcional, por si quieres permitir definir roles al crearlos
+  role?: UserRole; // Opcional, por si quieres permitir definir roles al crearlos
 
   @IsBoolean()
   @IsOptional()
