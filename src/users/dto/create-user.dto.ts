@@ -19,9 +19,9 @@ export class CreateUserDto {
 
   @IsEnum(UserRole)
   @IsOptional()
-  role?: UserRole; // Opcional, por si quieres permitir definir roles al crearlos
+  role?: UserRole;
 
   @IsBoolean()
   @IsOptional()
-  isActive?: boolean; // Opcional, puede usarse para crear usuarios inactivos
+  isActive?: boolean;
 }

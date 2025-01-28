@@ -1,27 +1,91 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from './entities/user.entity';
+import { isUUID } from 'class-validator';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
+    @Inject(Logger) private readonly logger: Logger,
+  ) {}
+
+  async create(createUserDto: CreateUserDto) {
+    try {
+      const newUser = this.usersRepository.create(createUserDto);
+      return await this.usersRepository.save(newUser);
+    } catch (error) {
+      this.handleDBExceptions(error);
+    }
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async findAll() {
+    const users = await this.usersRepository.find();
+    if (users.length === 0) throw new NotFoundException('No users found');
+    return users;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: string) {
+    let user: User;
+    if (isUUID(id)) user = await this.usersRepository.findOneBy({ id });
+    if (!user) throw new NotFoundException(`Product with ${id} not found`);
+    return user;
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    const toUpdate = updateUserDto;
+    const user = await this.usersRepository.preload({
+      id,
+      ...toUpdate,
+    });
+    if (!user) throw new NotFoundException(`User with id: ${id} not found`);
+    try {
+      return await this.usersRepository.save(user);
+    } catch (error) {
+      this.handleDBExceptions(error);
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: string) {
+    const user = await this.findOne(id);
+    await this.usersRepository.remove(user);
+    return `User with id ${id} has been deleted`;
+  }
+
+  async softRemove(id: string) {
+    const user = await this.findOne(id);
+    user.isActive = false;
+    const updatedUser = await this.usersRepository.save(user);
+    return updatedUser;
+  }
+
+  //TODO: Search for user by email
+  async findByEmail(email: string) {
+    return this.usersRepository.findOneBy({ email });
+  }
+
+  private handleDBExceptions(error: any) {
+    if (error.code === '23505') {
+      this.logger.error('User already exists', error.detail);
+      throw new BadRequestException('User already exists');
+    }
+
+    this.logger.error(error);
+    this.logger.log(error.code);
+    throw new InternalServerErrorException(
+      'Unexpected error, check server logs',
+    );
   }
 }
