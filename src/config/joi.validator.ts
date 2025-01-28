@@ -9,6 +9,9 @@ export const JoiValidationSchema = Joi.object({
   PORT: Joi.number().default(3000),
   NODE_ENV: Joi.string().valid('dev', 'prod', 'test').default('dev'),
   HOST_API: Joi.string().uri().default('http://localhost:3000/api'),
+  LOGGER_LEVEL: Joi.string()
+    .valid('log', 'error', 'warn', 'debug')
+    .default('log'),
   CLD_CLOUD_NAME: Joi.string().required(),
   CLD_API_KEY: Joi.string().required(),
   CLD_API_SECRET: Joi.string().required(),
