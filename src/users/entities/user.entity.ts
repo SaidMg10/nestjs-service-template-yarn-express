@@ -1,4 +1,3 @@
-import { Auth } from 'src/auth/entities/auth.entity';
 import { UserRole } from 'src/common/enums';
 import {
   Entity,
@@ -8,7 +7,6 @@ import {
   UpdateDateColumn,
   BeforeInsert,
   BeforeUpdate,
-  OneToMany,
 } from 'typeorm';
 
 @Entity()
@@ -25,6 +23,9 @@ export class User {
   @Column('text', { unique: true })
   email: string;
 
+  @Column('text')
+  password: string;
+
   @Column('int', { default: UserRole.USER })
   role: UserRole;
 
@@ -36,9 +37,6 @@ export class User {
 
   @UpdateDateColumn()
   updatedDate: Date;
-
-  @OneToMany(() => Auth, (auth) => auth.user, { cascade: true })
-  auth: Auth[];
 
   @BeforeInsert()
   checkFieldsBeforeInsert() {
